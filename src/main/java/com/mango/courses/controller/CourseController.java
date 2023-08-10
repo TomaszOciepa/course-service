@@ -2,6 +2,7 @@ package com.mango.courses.controller;
 
 import com.mango.courses.model.Course;
 import com.mango.courses.model.Status;
+import com.mango.courses.model.dto.StudentDto;
 import com.mango.courses.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,11 @@ public class CourseController {
     public ResponseEntity<?> courseEnrollment(@PathVariable String courseId, @PathVariable String studentId){
         courseService.courseEnrollment(courseId, studentId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{courseId}/members")
+    public List<StudentDto> getCourseMembers(@PathVariable String courseId){
+        return courseService.getCourseMembers(courseId);
     }
 }
 

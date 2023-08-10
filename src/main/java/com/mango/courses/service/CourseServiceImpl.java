@@ -6,10 +6,11 @@ import com.mango.courses.model.Course;
 import com.mango.courses.model.CourseMember;
 import com.mango.courses.model.Status;
 import com.mango.courses.repository.CourseRepository;
-import com.mango.courses.model.dto.Student;
+import com.mango.courses.model.dto.StudentDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -107,20 +108,28 @@ public class CourseServiceImpl implements CourseService {
         Course course = getCourse(courseId);
         validateCourseStatus(course);
 
-        Student student = studentServiceClient.getStudentById(studentId);
-        validateStudentBeforeCourseEnrollment(course, student);
+        StudentDto studentDto = studentServiceClient.getStudentById(studentId);
+        validateStudentBeforeCourseEnrollment(course, studentDto);
         course.incrementParticipantsNumber();
-        course.getCourseMembers().add(new CourseMember(student.getEmail()));
+        course.getCourseMembers().add(new CourseMember(studentDto.getEmail()));
         courseRepository.save(course);
     }
 
-    private void validateStudentBeforeCourseEnrollment(Course course, Student student) {
-        if (!Status.ACTIVE.equals(student.getStatus())) {
+    @Override
+    public List<StudentDto> getCourseMembers(String courseId) {
+        Course course = getCourse(courseId);
+        List<String> emailsMembers = course.getCourseMembers().stream()
+                .map(CourseMember::getEmail).collect(Collectors.toList());
+        return studentServiceClient.getStudentsByEmails(emailsMembers);
+    }
+
+    private void validateStudentBeforeCourseEnrollment(Course course, StudentDto studentDto) {
+        if (!Status.ACTIVE.equals(studentDto.getStatus())) {
             throw new CourseException(CourseError.STUDENT_IS_NOT_ACTIVE);
         }
         if (course.getCourseMembers()
                 .stream()
-                .anyMatch(member -> student.getEmail().equals(member.getEmail()))) {
+                .anyMatch(member -> studentDto.getEmail().equals(member.getEmail()))) {
 
             throw new CourseException(CourseError.STUDENT_ALREADY_ENROLLED);
         }

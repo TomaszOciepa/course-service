@@ -3,7 +3,7 @@ package com.mango.courses.model.dto;
 
 import com.mango.courses.model.Status;
 
-public class Student {
+public class StudentDto {
 
     private String id;
     private String firstName;
@@ -11,10 +11,10 @@ public class Student {
     private String email;
     private Status status;
 
-    public Student() {
+    public StudentDto() {
     }
 
-    public Student(String firstName, String lastName, String email, Status status) {
+    public StudentDto(String firstName, String lastName, String email, Status status) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
