@@ -4,6 +4,7 @@ import com.mango.courses.model.Course;
 import com.mango.courses.model.Status;
 import com.mango.courses.service.CourseService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,5 +39,10 @@ public class CourseController {
     }
 
 
+    @PostMapping("/{courseId}/student/{studentId}")
+    public ResponseEntity<?> courseEnrollment(@PathVariable String courseId, @PathVariable String studentId){
+        courseService.courseEnrollment(courseId, studentId);
+        return ResponseEntity.ok().build();
+    }
 }
 

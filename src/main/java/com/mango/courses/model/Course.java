@@ -11,6 +11,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document
 public class Course {
@@ -33,42 +35,42 @@ public class Course {
     @NotNull
     private Status status;
 
-    public Course(String name, String descriptions, LocalDateTime startDate, LocalDateTime endDate, Long participantsLimit, Long participantsNumber, Status status) {
-        this.name = name;
-        this.descriptions = descriptions;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.participantsLimit = participantsLimit;
-        this.participantsNumber = participantsNumber;
-        this.status = status;
-    }
+    private List<CourseMember> courseMembers = new ArrayList<>();
+
 
     public Course() {
     }
 
-    public void validateCourse(){
+    public void validateCourse() {
         validateStartDate();
         validateParticipantsNumber();
         validateStatus();
     }
 
+    public void incrementParticipantsNumber() {
+        participantsNumber++;
+        if (getParticipantsNumber().equals(getParticipantsLimit())) {
+            setStatus(Status.FULL);
+        }
+    }
+
     private void validateStatus() {
-        if(status.equals(Status.FULL) && !participantsLimit.equals(participantsNumber)){
+        if (status.equals(Status.FULL) && !participantsLimit.equals(participantsNumber)) {
             throw new CourseException(CourseError.COURSE_IS_NOT_FULL);
         }
-        if(status.equals(Status.ACTIVE) && participantsLimit.equals(participantsNumber)){
+        if (status.equals(Status.ACTIVE) && participantsLimit.equals(participantsNumber)) {
             throw new CourseException(CourseError.COURSE_IS_NOT_ACTIVE);
         }
     }
 
     private void validateParticipantsNumber() {
-        if(participantsNumber > participantsLimit){
+        if (participantsNumber > participantsLimit) {
             throw new CourseException(CourseError.COURSE_PARTICIPANTS_NUMBER_IS_GREATER_THAN_PARTICIPANTS_LIMIT);
         }
     }
 
     private void validateStartDate() {
-        if(startDate.isAfter(endDate)){
+        if (startDate.isAfter(endDate)) {
             throw new CourseException(CourseError.COURSE_START_DATE_IS_GREATER_THAN_END_DATE);
         }
     }
@@ -131,5 +133,13 @@ public class Course {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public List<CourseMember> getCourseMembers() {
+        return courseMembers;
+    }
+
+    public void setCourseMembers(List<CourseMember> courseMembers) {
+        this.courseMembers = courseMembers;
     }
 }

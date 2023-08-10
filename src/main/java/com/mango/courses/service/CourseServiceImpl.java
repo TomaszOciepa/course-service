@@ -3,8 +3,10 @@ package com.mango.courses.service;
 import com.mango.courses.exceptions.CourseError;
 import com.mango.courses.exceptions.CourseException;
 import com.mango.courses.model.Course;
+import com.mango.courses.model.CourseMember;
 import com.mango.courses.model.Status;
 import com.mango.courses.repository.CourseRepository;
+import com.mango.courses.model.dto.Student;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +15,11 @@ import java.util.List;
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
+    private final StudentServiceClient studentServiceClient;
 
-    public CourseServiceImpl(CourseRepository courseRepository) {
+    public CourseServiceImpl(CourseRepository courseRepository, StudentServiceClient studentServiceClient) {
         this.courseRepository = courseRepository;
+        this.studentServiceClient = studentServiceClient;
     }
 
     @Override
@@ -34,7 +38,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public Course addCourse(Course course) {
-        if(courseRepository.existsByName(course.getName())){
+        if (courseRepository.existsByName(course.getName())) {
             throw new CourseException(CourseError.COURSE_NAME_ALREADY_EXISTS);
         }
         course.validateCourse();
@@ -98,5 +102,34 @@ public class CourseServiceImpl implements CourseService {
                 })).orElseThrow(() -> new CourseException(CourseError.COURSE_NOT_FOUND));
     }
 
+    @Override
+    public void courseEnrollment(String courseId, String studentId) {
+        Course course = getCourse(courseId);
+        validateCourseStatus(course);
+
+        Student student = studentServiceClient.getStudentById(studentId);
+        validateStudentBeforeCourseEnrollment(course, student);
+        course.incrementParticipantsNumber();
+        course.getCourseMembers().add(new CourseMember(student.getEmail()));
+        courseRepository.save(course);
+    }
+
+    private void validateStudentBeforeCourseEnrollment(Course course, Student student) {
+        if (!Status.ACTIVE.equals(student.getStatus())) {
+            throw new CourseException(CourseError.STUDENT_IS_NOT_ACTIVE);
+        }
+        if (course.getCourseMembers()
+                .stream()
+                .anyMatch(member -> student.getEmail().equals(member.getEmail()))) {
+
+            throw new CourseException(CourseError.STUDENT_ALREADY_ENROLLED);
+        }
+    }
+
+    private void validateCourseStatus(Course course) {
+        if (!Status.ACTIVE.equals(course.getStatus())) {
+            throw new CourseException(CourseError.COURSE_IS_NOT_ACTIVE);
+        }
+    }
 
 }
